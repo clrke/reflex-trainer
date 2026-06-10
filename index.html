@@ -123,6 +123,15 @@
       transition: color 300ms;
     }
 
+    .hud-block.center { align-items: center; }
+
+    #best-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+
     #speed-display {
       font-family: 'Space Mono', monospace;
       font-size: 11px;
@@ -248,41 +257,6 @@
     #start-btn:hover { background: var(--subtle); border-color: #475569; }
     #start-btn:active { background: #334155; }
 
-    /* ── Stats ────────────────────────────────────────────── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      width: 100%;
-      margin-top: 28px;
-      border: 1px solid var(--subtle);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .stat {
-      padding: 12px 6px;
-      text-align: center;
-      background: var(--bg);
-    }
-
-    .stat + .stat { border-left: 1px solid var(--subtle); }
-
-    .stat-val {
-      font-family: 'Space Mono', monospace;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .stat-key {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
     /* ── Hint ─────────────────────────────────────────────── */
     #hint {
       margin-top: 20px;
@@ -354,6 +328,8 @@
       margin-bottom: 22px;
     }
 
+    #overlay-sub.new-best { color: var(--amber); }
+
     #retry-btn {
       padding: 13px 44px;
       border: 1px solid var(--green);
@@ -414,6 +390,10 @@
       <span class="hud-label">Score</span>
       <span id="score-display">0</span>
     </div>
+    <div class="hud-block center">
+      <span class="hud-label">Best</span>
+      <span id="best-display">0</span>
+    </div>
     <div class="hud-block right">
       <span class="hud-label">Level</span>
       <span id="level-display">1</span>
@@ -430,25 +410,6 @@
 
   <button id="start-btn">Start</button>
 
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-val" id="s-hits">0</div>
-      <div class="stat-key">Hits</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="s-misses">0</div>
-      <div class="stat-key">Misses</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="s-oops">0</div>
-      <div class="stat-key">Oops</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="s-acc">—</div>
-      <div class="stat-key">Accuracy</div>
-    </div>
-  </div>
-
   <div id="hint">
     Green → press &nbsp;·&nbsp; Red → hold back &nbsp;·&nbsp; Yellow → get ready<br>
     Spacebar or click the button &nbsp;·&nbsp; One mistake ends the run
@@ -463,13 +424,10 @@
   const scoreEl    = document.getElementById('score-display')
   const levelEl    = document.getElementById('level-display')
   const speedEl    = document.getElementById('speed-display')
+  const bestEl     = document.getElementById('best-display')
   const fbEl       = document.getElementById('feedback')
   const progressEl = document.getElementById('progress-bar')
   const flashEl    = document.getElementById('flash')
-  const sHits      = document.getElementById('s-hits')
-  const sMisses    = document.getElementById('s-misses')
-  const sOops      = document.getElementById('s-oops')
-  const sAcc       = document.getElementById('s-acc')
   const overlayEl  = document.getElementById('overlay')
   const ovReasonEl = document.getElementById('overlay-reason')
   const ovScoreEl  = document.getElementById('overlay-score')
@@ -481,9 +439,7 @@
   let activeIsRed    = false
   let score          = 0
   let totalCycles    = 0
-  let hits           = 0
-  let misses         = 0
-  let falseAlarms    = 0
+  let best           = loadBest()
   let clickedCycle   = false
   let running        = false
   let phaseTimeout   = null
@@ -511,15 +467,21 @@
     return Math.floor(Math.log2(rampInput() + 2))
   }
 
+  function loadBest() {
+    try { return Number(localStorage.getItem('reflex-best')) || 0 }
+    catch (e) { return 0 }
+  }
+
+  function saveBest(v) {
+    try { localStorage.setItem('reflex-best', String(v)) }
+    catch (e) { /* storage unavailable — keep in-memory only */ }
+  }
+
   function updateHUD() {
     scoreEl.textContent = score
+    bestEl.textContent  = best
     levelEl.textContent = level()
     speedEl.textContent = cycleDuration() + ' ms'
-    sHits.textContent   = hits
-    sMisses.textContent = misses
-    sOops.textContent   = falseAlarms
-    const green = hits + misses
-    sAcc.textContent    = green === 0 ? '—' : Math.round(hits / green * 100) + '%'
   }
 
   function setButton(state) {
@@ -598,7 +560,6 @@
     if (!running) return
     // Evaluate miss (false alarm is handled immediately on click)
     if (!activeIsRed && !clickedCycle) {
-      misses++
       showFeedback('miss', 'MISS')
       totalCycles++
       updateHUD()
@@ -620,9 +581,18 @@
     btnEl.disabled = true
     progressEl.style.transform = 'scaleX(0)'
 
+    // Record a new high score.
+    const isBest = score > best
+    if (isBest) {
+      best = score
+      saveBest(best)
+    }
+    bestEl.textContent = best
+
     ovReasonEl.textContent = reason
     ovScoreEl.textContent  = score
-    ovSubEl.textContent    = 'Score · Level ' + level()
+    ovSubEl.classList.toggle('new-best', isBest)
+    ovSubEl.textContent    = (isBest ? 'New best!' : 'Best ' + best) + ' · Level ' + level()
     overlayEl.classList.remove('show')
     void overlayEl.offsetWidth
     overlayEl.classList.add('show')
@@ -655,11 +625,9 @@
 
     if (!activeIsRed) {
       score++
-      hits++
       showFeedback('hit', '✓  HIT')
       pulseBtnHit()
     } else {
-      falseAlarms++
       showFeedback('oops', '✗  OOPS')
       triggerFlash()
       updateHUD()
@@ -675,9 +643,11 @@
     cancelAnimationFrame(progressRAF)
     overlayEl.classList.remove('show')
 
-    score = 0; totalCycles = 0; hits = 0; misses = 0; falseAlarms = 0
+    score = 0; totalCycles = 0
     clickedCycle = false
     running = true
+
+    ovSubEl.classList.remove('new-best')
 
     btnEl.disabled = false
     startEl.textContent = 'Restart'
