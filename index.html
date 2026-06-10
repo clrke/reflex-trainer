@@ -372,6 +372,14 @@
     #retry-btn:hover  { background: var(--green); color: var(--bg); }
     #retry-btn:active { transform: scale(0.97); }
 
+    #retry-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+      border-color: var(--muted);
+      color: var(--muted);
+      background: transparent;
+    }
+
     #overlay-hint {
       margin-top: 16px;
       font-size: 11px;
@@ -482,6 +490,9 @@
   let progressRAF    = null
   let phaseStartTime = 0
   let phaseDur       = 0
+  let retryReady     = false
+  let retryTimeout   = null
+  const RETRY_DELAY  = 1000   // ms the retry button stays locked after game over
 
   // ── Helpers ────────────────────────────────────────────────
   // Higher = gentler difficulty ramp (more cycles before each speed-up).
@@ -608,7 +619,16 @@
     overlayEl.classList.remove('show')
     void overlayEl.offsetWidth
     overlayEl.classList.add('show')
-    retryEl.focus()
+
+    // Lock the retry button briefly so a key-mash can't instantly restart.
+    retryReady = false
+    retryEl.disabled = true
+    clearTimeout(retryTimeout)
+    retryTimeout = setTimeout(() => {
+      retryReady = true
+      retryEl.disabled = false
+      retryEl.focus()
+    }, RETRY_DELAY)
   }
 
   // ── Input ──────────────────────────────────────────────────
@@ -644,6 +664,7 @@
 
   function startGame() {
     clearTimeout(phaseTimeout)
+    clearTimeout(retryTimeout)
     cancelAnimationFrame(progressRAF)
     overlayEl.classList.remove('show')
 
@@ -666,11 +687,12 @@
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' && !e.repeat) {
       e.preventDefault()
-      if (phase === 'idle' || phase === 'over') startGame()
+      if (phase === 'over') { if (retryReady) startGame() }
+      else if (phase === 'idle') startGame()
       else onReact()
     } else if (e.code === 'Enter' && !e.repeat && phase === 'over') {
       e.preventDefault()
-      startGame()
+      if (retryReady) startGame()
     }
   })
 
