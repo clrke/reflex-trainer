@@ -193,7 +193,15 @@
       transition: background-color 100ms ease;
       outline: none;
       z-index: 1;
+      font-family: 'Space Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(15, 23, 42, 0.85);
     }
+
+    #reaction-btn.state-idle { color: var(--muted); }
 
     #reaction-btn:disabled { cursor: default; }
 
@@ -483,9 +491,17 @@
     speedEl.textContent = cycleDuration() + ' ms'
   }
 
+  const BTN_LABELS = {
+    idle:   '',
+    yellow: 'WAIT',
+    green:  'PRESS NOW',
+    red:    'DON’T PRESS'
+  }
+
   function setButton(state) {
     // state: 'idle' | 'yellow' | 'green' | 'red'
     btnEl.className = 'state-' + state
+    btnEl.textContent = BTN_LABELS[state] || ''
     glowEl.className = 'btn-glow'
     if (state === 'yellow') {
       // One full pulse per yellow phase — keeps the rhythm in sync with speed.
