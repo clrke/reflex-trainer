@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reflex Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F172A;
+      --amber: #F59E0B;
+      --green: #10B981;
+      --red: #EF4444;
+      --idle: #334155;
+      --text: #F8FAFC;
+      --muted: #64748B;
+      --subtle: #1E293B;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ── Progress bar ─────────────────────────────────────── */
+    #progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--subtle);
+      z-index: 100;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 100%;
+      transform: scaleX(0);
+      transform-origin: left center;
+      background: var(--idle);
+      will-change: transform;
+    }
+
+    /* ── Screen flash overlay ─────────────────────────────── */
+    #flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      box-shadow: inset 0 0 100px 50px rgba(239, 68, 68, 0.45);
+    }
+
+    #flash.active {
+      animation: flash-anim 500ms ease-out forwards;
+    }
+
+    @keyframes flash-anim {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .game-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 380px;
+      padding: 24px 20px;
+      gap: 0;
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      width: 100%;
+      margin-bottom: 44px;
+    }
+
+    .hud-block { display: flex; flex-direction: column; }
+    .hud-block.right { align-items: flex-end; }
+
+    .hud-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    #score-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 60px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -2px;
+      color: var(--text);
+    }
+
+    #level-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--muted);
+      transition: color 300ms;
+    }
+
+    #speed-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Reaction button ──────────────────────────────────── */
+    .btn-area {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    /* Glow ring — separate element so it doesn't fight with pulse animation */
+    .btn-glow {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 100ms;
+    }
+
+    .btn-glow.glow-amber {
+      box-shadow: 0 0 60px 20px rgba(245, 158, 11, 0.45), 0 0 120px 40px rgba(245, 158, 11, 0.18);
+      opacity: 1;
+      animation: glow-pulse 700ms ease-in-out infinite;
+    }
+
+    .btn-glow.glow-green {
+      box-shadow: 0 0 70px 25px rgba(16, 185, 129, 0.55), 0 0 140px 50px rgba(16, 185, 129, 0.2);
+      opacity: 1;
+    }
+
+    .btn-glow.glow-red {
+      box-shadow: 0 0 70px 25px rgba(239, 68, 68, 0.55), 0 0 140px 50px rgba(239, 68, 68, 0.2);
+      opacity: 1;
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { transform: scale(1);    opacity: 0.7; }
+      50%       { transform: scale(1.12); opacity: 1;   }
+    }
+
+    #reaction-btn {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: var(--idle);
+      transition: background-color 100ms ease;
+      outline: none;
+      z-index: 1;
+    }
+
+    #reaction-btn:disabled { cursor: default; }
+
+    #reaction-btn:focus-visible {
+      outline: 3px solid rgba(248, 250, 252, 0.5);
+      outline-offset: 6px;
+    }
+
+    #reaction-btn.state-yellow { background: var(--amber); }
+    #reaction-btn.state-green  { background: var(--green); }
+    #reaction-btn.state-red    { background: var(--red); }
+    #reaction-btn.state-idle   { background: var(--idle); }
+
+    #reaction-btn.hit-pulse {
+      animation: hit-pulse 280ms ease-out forwards;
+    }
+
+    @keyframes hit-pulse {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.09); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Feedback text ────────────────────────────────────── */
+    #feedback {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      height: 20px;
+      color: transparent;
+    }
+
+    #feedback.show-hit  { color: var(--green); animation: fb-fade 800ms ease-out forwards; }
+    #feedback.show-miss { color: var(--muted);  animation: fb-fade 800ms ease-out forwards; }
+    #feedback.show-oops { color: var(--red);    animation: fb-fade 800ms ease-out forwards; }
+
+    @keyframes fb-fade {
+      0%   { opacity: 1; }
+      60%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ── Start button ─────────────────────────────────────── */
+    #start-btn {
+      margin-top: 24px;
+      padding: 11px 36px;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 150ms, border-color 150ms;
+    }
+
+    #start-btn:hover { background: var(--subtle); border-color: #475569; }
+    #start-btn:active { background: #334155; }
+
+    /* ── Stats ────────────────────────────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      width: 100%;
+      margin-top: 28px;
+      border: 1px solid var(--subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .stat {
+      padding: 12px 6px;
+      text-align: center;
+      background: var(--bg);
+    }
+
+    .stat + .stat { border-left: 1px solid var(--subtle); }
+
+    .stat-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-key {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Hint ─────────────────────────────────────────────── */
+    #hint {
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    /* ── Reduced motion ───────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .btn-glow, #flash, #feedback, #reaction-btn { animation: none !important; }
+      * { transition-duration: 0ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress-track"><div id="progress-bar"></div></div>
+<div id="flash"></div>
+
+<div class="game-wrap">
+  <div class="hud">
+    <div class="hud-block">
+      <span class="hud-label">Score</span>
+      <span id="score-display">0</span>
+    </div>
+    <div class="hud-block right">
+      <span class="hud-label">Level</span>
+      <span id="level-display">1</span>
+      <span id="speed-display">1000 ms</span>
+    </div>
+  </div>
+
+  <div class="btn-area">
+    <div class="btn-glow" id="btn-glow"></div>
+    <button id="reaction-btn" class="state-idle" disabled aria-label="Reaction target — press when green"></button>
+  </div>
+
+  <div id="feedback" aria-live="polite"></div>
+
+  <button id="start-btn">Start</button>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" id="s-hits">0</div>
+      <div class="stat-key">Hits</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="s-misses">0</div>
+      <div class="stat-key">Misses</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="s-oops">0</div>
+      <div class="stat-key">Oops</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="s-acc">—</div>
+      <div class="stat-key">Accuracy</div>
+    </div>
+  </div>
+
+  <div id="hint">
+    Green → press &nbsp;·&nbsp; Red → hold back &nbsp;·&nbsp; Yellow → get ready<br>
+    Spacebar or click the button
+  </div>
+</div>
+
+<script>
+  // ── Elements ──────────────────────────────────────────────
+  const btnEl      = document.getElementById('reaction-btn')
+  const glowEl     = document.getElementById('btn-glow')
+  const startEl    = document.getElementById('start-btn')
+  const scoreEl    = document.getElementById('score-display')
+  const levelEl    = document.getElementById('level-display')
+  const speedEl    = document.getElementById('speed-display')
+  const fbEl       = document.getElementById('feedback')
+  const progressEl = document.getElementById('progress-bar')
+  const flashEl    = document.getElementById('flash')
+  const sHits      = document.getElementById('s-hits')
+  const sMisses    = document.getElementById('s-misses')
+  const sOops      = document.getElementById('s-oops')
+  const sAcc       = document.getElementById('s-acc')
+
+  // ── State ──────────────────────────────────────────────────
+  let phase          = 'idle'   // 'idle' | 'yellow' | 'active'
+  let activeIsRed    = false
+  let score          = 0
+  let totalCycles    = 0
+  let hits           = 0
+  let misses         = 0
+  let falseAlarms    = 0
+  let clickedCycle   = false
+  let running        = false
+  let phaseTimeout   = null
+  let progressRAF    = null
+  let phaseStartTime = 0
+  let phaseDur       = 0
+
+  // ── Helpers ────────────────────────────────────────────────
+  function cycleDuration() {
+    return Math.max(150, Math.round(1000 / Math.log2(totalCycles + 2)))
+  }
+
+  function level() {
+    return Math.floor(Math.log2(totalCycles + 2))
+  }
+
+  function updateHUD() {
+    scoreEl.textContent = score
+    levelEl.textContent = level()
+    speedEl.textContent = cycleDuration() + ' ms'
+    sHits.textContent   = hits
+    sMisses.textContent = misses
+    sOops.textContent   = falseAlarms
+    const green = hits + misses
+    sAcc.textContent    = green === 0 ? '—' : Math.round(hits / green * 100) + '%'
+  }
+
+  function setButton(state) {
+    // state: 'idle' | 'yellow' | 'green' | 'red'
+    btnEl.className = 'state-' + state
+    glowEl.className = 'btn-glow'
+    if (state === 'yellow') glowEl.classList.add('glow-amber')
+    else if (state === 'green') glowEl.classList.add('glow-green')
+    else if (state === 'red')   glowEl.classList.add('glow-red')
+  }
+
+  function showFeedback(type, text) {
+    // Reset animation
+    fbEl.className = ''
+    fbEl.textContent = ''
+    void fbEl.offsetWidth   // force reflow
+    fbEl.textContent = text
+    fbEl.className = 'show-' + type
+  }
+
+  function triggerFlash() {
+    flashEl.className = ''
+    void flashEl.offsetWidth
+    flashEl.className = 'active'
+  }
+
+  function pulseBtnHit() {
+    btnEl.classList.remove('hit-pulse')
+    void btnEl.offsetWidth
+    btnEl.classList.add('hit-pulse')
+  }
+
+  // ── Progress bar ───────────────────────────────────────────
+  function startProgress(duration, color) {
+    cancelAnimationFrame(progressRAF)
+    progressEl.style.background = color
+    phaseStartTime = performance.now()
+    phaseDur = duration
+
+    function tick(now) {
+      const t = Math.max(0, 1 - (now - phaseStartTime) / phaseDur)
+      progressEl.style.transform = `scaleX(${t})`
+      if (t > 0) progressRAF = requestAnimationFrame(tick)
+    }
+    progressRAF = requestAnimationFrame(tick)
+  }
+
+  // ── Game loop ──────────────────────────────────────────────
+  function doYellow() {
+    if (!running) return
+    phase = 'yellow'
+    clickedCycle = false
+    const dur = cycleDuration()
+    setButton('yellow')
+    startProgress(dur, 'var(--amber)')
+    phaseTimeout = setTimeout(doActive, dur)
+  }
+
+  function doActive() {
+    if (!running) return
+    phase = 'active'
+    activeIsRed = Math.random() < 0.1
+    const dur = cycleDuration()
+    setButton(activeIsRed ? 'red' : 'green')
+    startProgress(dur, activeIsRed ? 'var(--red)' : 'var(--green)')
+    phaseTimeout = setTimeout(doEnd, dur)
+  }
+
+  function doEnd() {
+    if (!running) return
+    // Evaluate miss (false alarm is handled immediately on click)
+    if (!activeIsRed && !clickedCycle) {
+      misses++
+      showFeedback('miss', 'MISS')
+    }
+    totalCycles++
+    updateHUD()
+    doYellow()
+  }
+
+  // ── Input ──────────────────────────────────────────────────
+  function onReact() {
+    if (!running || phase !== 'active' || clickedCycle) return
+    clickedCycle = true
+
+    if (!activeIsRed) {
+      score++
+      hits++
+      showFeedback('hit', '✓  HIT')
+      pulseBtnHit()
+    } else {
+      score = Math.max(0, score - 1)
+      falseAlarms++
+      showFeedback('oops', '✗  OOPS')
+      triggerFlash()
+    }
+    updateHUD()
+  }
+
+  function startGame() {
+    clearTimeout(phaseTimeout)
+    cancelAnimationFrame(progressRAF)
+
+    score = 0; totalCycles = 0; hits = 0; misses = 0; falseAlarms = 0
+    clickedCycle = false
+    running = true
+
+    btnEl.disabled = false
+    startEl.textContent = 'Restart'
+    progressEl.style.transform = 'scaleX(0)'
+
+    updateHUD()
+    doYellow()
+  }
+
+  btnEl.addEventListener('click', onReact)
+  startEl.addEventListener('click', startGame)
+
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !e.repeat) {
+      e.preventDefault()
+      phase === 'idle' ? startGame() : onReact()
+    }
+  })
+
+  btnEl.addEventListener('animationend', e => {
+    if (e.animationName === 'hit-pulse') btnEl.classList.remove('hit-pulse')
+  })
+
+  // Init
+  updateHUD()
+</script>
+</body>
+</html>
