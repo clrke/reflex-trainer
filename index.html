@@ -451,20 +451,19 @@
   const RETRY_DELAY  = 1000   // ms the retry button stays locked after game over
 
   // ── Helpers ────────────────────────────────────────────────
-  // Higher = gentler difficulty ramp (more cycles before each speed-up).
-  // 0.5 puts the 150 ms floor at ~cycle 50.
-  const SPEED_RAMP = 0.5
-
-  function rampInput() {
-    return totalCycles / SPEED_RAMP
-  }
+  // Linear speed ramp: START_MS at cycle 0, dropping evenly to FLOOR_MS at
+  // FLOOR_CYCLE, then held at the floor. ~17 ms faster per cycle.
+  const START_MS    = 1000
+  const FLOOR_MS    = 150
+  const FLOOR_CYCLE = 50
 
   function cycleDuration() {
-    return Math.max(150, Math.round(1000 / Math.log2(rampInput() + 2)))
+    const d = START_MS - (START_MS - FLOOR_MS) * (totalCycles / FLOOR_CYCLE)
+    return Math.max(FLOOR_MS, Math.round(d))
   }
 
   function level() {
-    return Math.floor(Math.log2(rampInput() + 2))
+    return Math.floor(totalCycles / 10) + 1
   }
 
   function loadBest() {

@@ -30,18 +30,18 @@ Accuracy shown in stats = hits ÷ green cycles only.
 ## Speed curve
 
 ```
-Duration (ms) = max(150, round(1000 / log₂(cycles / 0.5 + 2)))
+Duration (ms) = max(150, round(1000 − 850 × cycles / 50))
 ```
 
-The `0.5` is the `SPEED_RAMP` constant — it's tuned so the 150 ms floor is
-reached at ~cycle 50. Raise it for a gentler curve (floor later), lower it to
-ramp faster (floor sooner).
+A linear ramp: the cycle starts at 1000 ms and gets ~17 ms faster every cycle,
+reaching the 150 ms floor at cycle 50, then holding there. Tune via the
+`START_MS`, `FLOOR_MS`, and `FLOOR_CYCLE` constants.
 
 | Cycles | Duration |
 |---|---|
 | 0 | 1000 ms |
-| 10 | 224 ms |
-| 20 | 185 ms |
-| 30 | 168 ms |
-| 40 | 157 ms |
+| 10 | 830 ms |
+| 20 | 660 ms |
+| 30 | 490 ms |
+| 40 | 320 ms |
 | 50+ | 150 ms (floor) |
