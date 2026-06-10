@@ -3,7 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reflex Trainer</title>
+
+  <!-- ── Primary SEO ─────────────────────────────────────────── -->
+  <title>Reflex Trainer — Free Online Reaction Time Test &amp; Speed Game</title>
+  <meta name="description" content="Reflex Trainer is a free browser-based reaction speed game. Press on green, hold back on red — one mistake ends the run. Test and improve your reaction time, beat your high score. No download, no signup.">
+  <meta name="keywords" content="reflex trainer, reaction time test, reaction speed game, reflex game, reaction time, online game, brain training, reflex test, hand-eye coordination">
+  <meta name="author" content="clrke">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0F172A">
+  <link rel="canonical" href="https://clrke.github.io/reflex-trainer/">
+
+  <!-- ── Open Graph (Facebook, LinkedIn, etc.) ───────────────── -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Reflex Trainer">
+  <meta property="og:title" content="Reflex Trainer — Free Online Reaction Time Test">
+  <meta property="og:description" content="A fast, free reaction-speed game. Press on green, hold back on red — one mistake ends the run. Beat your high score.">
+  <meta property="og:url" content="https://clrke.github.io/reflex-trainer/">
+  <meta property="og:image" content="https://clrke.github.io/reflex-trainer/og-image.png">
+
+  <!-- ── Twitter Card ────────────────────────────────────────── -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Reflex Trainer — Free Online Reaction Time Test">
+  <meta name="twitter:description" content="A fast, free reaction-speed game. Press on green, hold back on red — one mistake ends the run. Beat your high score.">
+  <meta name="twitter:image" content="https://clrke.github.io/reflex-trainer/og-image.png">
+
+  <!-- ── Favicon (inline SVG, no extra request) ──────────────── -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230F172A'/%3E%3Ccircle cx='50' cy='50' r='28' fill='%2310B981'/%3E%3C/svg%3E">
+
+  <!-- ── Structured data (Schema.org VideoGame) ──────────────── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Reflex Trainer",
+    "description": "A free browser-based reaction speed game. Press on green, hold back on red — one mistake ends the run. Test and improve your reaction time.",
+    "url": "https://clrke.github.io/reflex-trainer/",
+    "genre": ["Reaction", "Arcade", "Brain Training"],
+    "gamePlatform": "Web browser",
+    "applicationCategory": "Game",
+    "operatingSystem": "Any (web browser)",
+    "inLanguage": "en",
+    "author": { "@type": "Person", "name": "clrke" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -371,6 +415,17 @@
       letter-spacing: 0.04em;
     }
 
+    /* ── Visually hidden (accessible to crawlers / screen readers) ─ */
+    .visually-hidden {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     /* ── Reduced motion ───────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       .btn-glow, #flash, #feedback, #reaction-btn { animation: none !important; }
@@ -393,6 +448,20 @@
 </div>
 
 <div class="game-wrap">
+  <h1 class="visually-hidden">Reflex Trainer — Free Online Reaction Time Test</h1>
+  <p class="visually-hidden">
+    A free browser-based reaction speed game. Click Start or press Space, then
+    press when the target turns green, hold back when it turns red, and wait on
+    yellow. One mistake ends the run — beat your high score and improve your
+    reaction time.
+  </p>
+  <noscript>
+    <p style="text-align:center;padding:20px">
+      Reflex Trainer is a reaction-time game that requires JavaScript.
+      Please enable JavaScript in your browser to play.
+    </p>
+  </noscript>
+
   <div class="hud">
     <div class="hud-block">
       <span class="hud-label">Score</span>
