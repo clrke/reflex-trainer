@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="32%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#162236"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </radialGradient>
+    <radialGradient id="greenGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="55%" stop-color="#10B981" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="disc" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Top progress bar accent -->
+  <rect x="0" y="0" width="1200" height="8" fill="#10B981"/>
+
+  <!-- Target on the right -->
+  <g transform="translate(905,315)">
+    <circle r="290" fill="url(#greenGlow)"/>
+    <circle r="170" fill="url(#disc)"/>
+    <text x="0" y="14" text-anchor="middle"
+      font-family="'Space Mono', monospace" font-weight="700" font-size="46"
+      letter-spacing="2" fill="#0F172A">PRESS</text>
+    <text x="0" y="66" text-anchor="middle"
+      font-family="'Space Mono', monospace" font-weight="700" font-size="46"
+      letter-spacing="2" fill="#0F172A">NOW</text>
+  </g>
+
+  <!-- Text block on the left -->
+  <g transform="translate(90,250)">
+    <text x="0" y="0"
+      font-family="'Space Mono', monospace" font-weight="700" font-size="14"
+      letter-spacing="6" fill="#F59E0B">REACTION TIME TEST</text>
+    <text x="-4" y="86"
+      font-family="'Space Mono', monospace" font-weight="700" font-size="92"
+      letter-spacing="-3" fill="#F8FAFC">Reflex</text>
+    <text x="-4" y="180"
+      font-family="'Space Mono', monospace" font-weight="700" font-size="92"
+      letter-spacing="-3" fill="#10B981">Trainer</text>
+    <text x="0" y="240"
+      font-family="'Inter', system-ui, sans-serif" font-weight="500" font-size="26"
+      fill="#94A3B8">Green = press · Red = hold back.</text>
+    <text x="0" y="278"
+      font-family="'Inter', system-ui, sans-serif" font-weight="500" font-size="26"
+      fill="#94A3B8">One mistake ends the run.</text>
+  </g>
+</svg>
