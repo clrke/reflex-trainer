@@ -613,7 +613,17 @@
 
   // ── Input ──────────────────────────────────────────────────
   function onReact() {
-    if (!running || phase !== 'active' || clickedCycle) return
+    if (!running) return
+
+    // Jumped the gun — pressed before the target went green.
+    if (phase === 'yellow') {
+      showFeedback('oops', '✗  TOO SOON')
+      triggerFlash()
+      gameOver('You jumped the gun')
+      return
+    }
+
+    if (phase !== 'active' || clickedCycle) return
     clickedCycle = true
 
     if (!activeIsRed) {

@@ -21,6 +21,7 @@ Each green you hit is +1. A run ends immediately on either mistake:
 | Event | Result |
 |---|---|
 | Press during green | +1 score |
+| Press during yellow (jumped the gun) | **Game over** |
 | Press during red (false alarm) | **Game over** |
 | Miss a green | **Game over** |
 
