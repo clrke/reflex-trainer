@@ -496,7 +496,8 @@
 
   // ── Helpers ────────────────────────────────────────────────
   // Higher = gentler difficulty ramp (more cycles before each speed-up).
-  const SPEED_RAMP = 3
+  // 0.5 puts the 150 ms floor at ~cycle 50.
+  const SPEED_RAMP = 0.5
 
   function rampInput() {
     return totalCycles / SPEED_RAMP
