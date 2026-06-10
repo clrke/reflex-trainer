@@ -525,9 +525,15 @@
     // state: 'idle' | 'yellow' | 'green' | 'red'
     btnEl.className = 'state-' + state
     glowEl.className = 'btn-glow'
-    if (state === 'yellow') glowEl.classList.add('glow-amber')
-    else if (state === 'green') glowEl.classList.add('glow-green')
-    else if (state === 'red')   glowEl.classList.add('glow-red')
+    if (state === 'yellow') {
+      // One full pulse per yellow phase — keeps the rhythm in sync with speed.
+      glowEl.style.animationDuration = cycleDuration() + 'ms'
+      glowEl.classList.add('glow-amber')
+    } else {
+      glowEl.style.animationDuration = ''
+      if (state === 'green')    glowEl.classList.add('glow-green')
+      else if (state === 'red') glowEl.classList.add('glow-red')
+    }
   }
 
   function showFeedback(type, text) {
