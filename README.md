@@ -12,15 +12,19 @@ Open `index.html` in any browser. Click **Start** or press **Space**.
 
 The cycle speeds up logarithmically the longer you play.
 
+It's a survival run: **one mistake ends the game.** When you're out, click **Retry** or press **Enter** to start over.
+
 ## Scoring
 
-| Event | Score |
-|---|---|
-| Press during green | +1 |
-| Press during red (false alarm) | −1 |
-| Miss green | 0 |
+Each green you hit is +1. A run ends immediately on either mistake:
 
-Accuracy shown in stats = hits ÷ green cycles only (false alarms tracked separately).
+| Event | Result |
+|---|---|
+| Press during green | +1 score |
+| Press during red (false alarm) | **Game over** |
+| Miss a green | **Game over** |
+
+Accuracy shown in stats = hits ÷ green cycles only.
 
 ## Speed curve
 

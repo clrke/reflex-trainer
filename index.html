@@ -293,6 +293,92 @@
       line-height: 1.8;
     }
 
+    /* ── Game over overlay ────────────────────────────────── */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      text-align: center;
+      padding: 24px;
+    }
+
+    #overlay.show {
+      display: flex;
+      animation: overlay-in 220ms ease-out forwards;
+    }
+
+    @keyframes overlay-in {
+      0%   { opacity: 0; transform: scale(1.04); }
+      100% { opacity: 1; transform: scale(1);    }
+    }
+
+    #overlay-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--red);
+    }
+
+    #overlay-reason {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+    }
+
+    #overlay-score {
+      font-family: 'Space Mono', monospace;
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -3px;
+      color: var(--text);
+    }
+
+    #overlay-sub {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+
+    #retry-btn {
+      padding: 13px 44px;
+      border: 1px solid var(--green);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--green);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 150ms, color 150ms;
+    }
+
+    #retry-btn:hover  { background: var(--green); color: var(--bg); }
+    #retry-btn:active { transform: scale(0.97); }
+
+    #overlay-hint {
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
     /* ── Reduced motion ───────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       .btn-glow, #flash, #feedback, #reaction-btn { animation: none !important; }
@@ -304,6 +390,15 @@
 
 <div id="progress-track"><div id="progress-bar"></div></div>
 <div id="flash"></div>
+
+<div id="overlay" aria-live="assertive">
+  <div id="overlay-title">Game Over</div>
+  <div id="overlay-reason"></div>
+  <div id="overlay-score">0</div>
+  <div id="overlay-sub">Score</div>
+  <button id="retry-btn">Retry</button>
+  <div id="overlay-hint">Press <b>Enter</b> to retry</div>
+</div>
 
 <div class="game-wrap">
   <div class="hud">
@@ -348,7 +443,7 @@
 
   <div id="hint">
     Green → press &nbsp;·&nbsp; Red → hold back &nbsp;·&nbsp; Yellow → get ready<br>
-    Spacebar or click the button
+    Spacebar or click the button &nbsp;·&nbsp; One mistake ends the run
   </div>
 </div>
 
@@ -367,6 +462,11 @@
   const sMisses    = document.getElementById('s-misses')
   const sOops      = document.getElementById('s-oops')
   const sAcc       = document.getElementById('s-acc')
+  const overlayEl  = document.getElementById('overlay')
+  const ovReasonEl = document.getElementById('overlay-reason')
+  const ovScoreEl  = document.getElementById('overlay-score')
+  const ovSubEl    = document.getElementById('overlay-sub')
+  const retryEl    = document.getElementById('retry-btn')
 
   // ── State ──────────────────────────────────────────────────
   let phase          = 'idle'   // 'idle' | 'yellow' | 'active'
@@ -475,10 +575,33 @@
     if (!activeIsRed && !clickedCycle) {
       misses++
       showFeedback('miss', 'MISS')
+      totalCycles++
+      updateHUD()
+      gameOver('You missed a green')
+      return
     }
     totalCycles++
     updateHUD()
     doYellow()
+  }
+
+  function gameOver(reason) {
+    running = false
+    phase = 'over'
+    clearTimeout(phaseTimeout)
+    cancelAnimationFrame(progressRAF)
+
+    setButton('idle')
+    btnEl.disabled = true
+    progressEl.style.transform = 'scaleX(0)'
+
+    ovReasonEl.textContent = reason
+    ovScoreEl.textContent  = score
+    ovSubEl.textContent    = 'Score · Level ' + level()
+    overlayEl.classList.remove('show')
+    void overlayEl.offsetWidth
+    overlayEl.classList.add('show')
+    retryEl.focus()
   }
 
   // ── Input ──────────────────────────────────────────────────
@@ -492,10 +615,12 @@
       showFeedback('hit', '✓  HIT')
       pulseBtnHit()
     } else {
-      score = Math.max(0, score - 1)
       falseAlarms++
       showFeedback('oops', '✗  OOPS')
       triggerFlash()
+      updateHUD()
+      gameOver('You pressed on red')
+      return
     }
     updateHUD()
   }
@@ -503,6 +628,7 @@
   function startGame() {
     clearTimeout(phaseTimeout)
     cancelAnimationFrame(progressRAF)
+    overlayEl.classList.remove('show')
 
     score = 0; totalCycles = 0; hits = 0; misses = 0; falseAlarms = 0
     clickedCycle = false
@@ -518,11 +644,16 @@
 
   btnEl.addEventListener('click', onReact)
   startEl.addEventListener('click', startGame)
+  retryEl.addEventListener('click', startGame)
 
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' && !e.repeat) {
       e.preventDefault()
-      phase === 'idle' ? startGame() : onReact()
+      if (phase === 'idle' || phase === 'over') startGame()
+      else onReact()
+    } else if (e.code === 'Enter' && !e.repeat && phase === 'over') {
+      e.preventDefault()
+      startGame()
     }
   })
 
