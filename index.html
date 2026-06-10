@@ -484,12 +484,19 @@
   let phaseDur       = 0
 
   // ── Helpers ────────────────────────────────────────────────
+  // Higher = gentler difficulty ramp (more cycles before each speed-up).
+  const SPEED_RAMP = 3
+
+  function rampInput() {
+    return totalCycles / SPEED_RAMP
+  }
+
   function cycleDuration() {
-    return Math.max(150, Math.round(1000 / Math.log2(totalCycles + 2)))
+    return Math.max(150, Math.round(1000 / Math.log2(rampInput() + 2)))
   }
 
   function level() {
-    return Math.floor(Math.log2(totalCycles + 2))
+    return Math.floor(Math.log2(rampInput() + 2))
   }
 
   function updateHUD() {
